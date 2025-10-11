@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Maze 🔗</title>
+    <style>
+        /* General Setup */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f0f8ff; 
+        }
+        h1 {
+            color: #00bcd4; 
+        }
+        #game-container {
+            width: 1200px;
+            height: 900px; 
+            position: relative; 
+            margin-top: 30px;
+        }
+        
+        /* Question and Final Boxes (outside the path) */
+        .box {
+            width: 200px; 
+            height: 60px; 
+            line-height: 60px;
+            text-align: center;
+            background-color: #ffffff;
+            border: 3px solid #b3e5fc; 
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: absolute; 
+            z-index: 10; 
+            box-sizing: border-box;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 0 10px rgba(255, 255, 255, 0.5); 
+            display: flex; /* For centering content within the box */
+            align-items: center;
+            justify-content: center;
+            padding-left: 10px; /* Space for the result icon */
+        }
+        .question:hover { border-color: #00bcd4; background-color: #e0f7fa; }
+        .question.selected { color: black; border-color: #006064; } 
+        
+        /* Specific colors for Question Boxes */
+        #q-10x5.selected { background-color: #D32F2F; } 
+        #q-15x4.selected { background-color: #388E3C; } 
+        #q-5\+7.selected { background-color: #1976D2; } 
+        #q-8\+6.selected { background-color: #F57C00; } 
+
+        .final-answer-box {
+            background-color: #1e88e5; 
+            color: white;
+            cursor: default;
+            border-color: #0d47a1;
+            font-size: 1.5em; 
+            padding-left: 0; /* Reset padding */
+        }
+
+        /* Answer content and icon alignment */
+        .answer-content {
+            flex-grow: 1; /* Allows the text to take up space */
+            text-align: center;
+        }
+        
+        /* New styles for result icons */
+        .result-icon {
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            font-size: 1.5em;
+            font-weight: bold;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .correct { color: #4CAF50; } /* Green tick */
+        .wrong { color: #F44336; } /* Red X */
+        
+        /* Message Display */
+        #message {
+            margin-top: 20px;
+            font-size: 1.4em;
+            color: #ef5350; 
+            min-height: 30px;
+            font-weight: bold;
+        }
+        
+        /* Canvas */
+        #mazeCanvas {
+            background-color: #e3f2fd; 
+            position: absolute; 
+            left: 200px; 
+            top: 0;
+            z-index: 1;
+            border-radius: 15px; 
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.1); 
+        }
+
+        /* --- CONTROL BUTTONS --- */
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        #submit-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #submit-btn:hover { background-color: #388E3C; transform: translateY(-2px); }
+        #submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; }
+
+        #show-answer-btn {
+            background-color: #FFC107;
+            color: #333;
+            display: none; /* Initially hidden */
+        }
+        #show-answer-btn:hover { background-color: #FFB300; transform: translateY(-2px); }
+
+        /* --- NEW MODAL STYLES --- */
+        #success-modal {
+            display: none; 
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7); 
+        }
+
+        #modal-content {
+            background-color: #ffffff;
+            margin: 15% auto; 
+            padding: 40px;
+            border: 1px solid #888;
+            width: 50%; 
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        #modal-content h2 {
+            color: #388E3C; 
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        
+        #modal-teacher-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            border: 5px solid #4CAF50;
+        }
+
+        #modal-answer-text {
+            font-size: 1.8em;
+            color: #1976D2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nexus Maze 🔗</h1>
+
+    <div id="message"></div>
+    
+    <div id="game-container">
+        <canvas id="mazeCanvas"></canvas>
+
+        <div class="box question" id="q-10x5" data-q-key="10 gấp 5 lần" data-correct-val="50">10 gấp 5 lần</div>
+        <div class="box question" id="q-15x4" data-q-key="15 gấp 4 lần" data-correct-val="60">15 gấp 4 lần</div>
+        <div class="box question" id="q-5+7" data-q-key="7 thêm 5 đơn vị" data-correct-val="12">7 thêm 5 đơn vị</div>
+        <div class="box question" id="q-8+6" data-q-key="6 thêm 8 đơn vị" data-correct-val="14">6 thêm 8 đơn vị</div>
+        
+        <div class="box final-answer-box" id="fb-0">
+            <span class="answer-content">?</span>
+        </div>
+        <div class="box final-answer-box" id="fb-1">
+            <span class="answer-content">?</span>
+        </div>
+        <div class="box final-answer-box" id="fb-2">
+            <span class="answer-content">?</span>
+        </div>
+        <div class="box final-answer-box" id="fb-3">
+            <span class="answer-content">?</span>
+        </div>
+
+    </div>
+    
+    <div id="controls">
+        <button id="submit-btn" class="control-btn" disabled>Nộp đáp án</button>
+        <button id="show-answer-btn" class="control-btn">Xem đáp án</button>
+    </div>
+
+    <div id="success-modal">
+        <div id="modal-content">
+            <img id="modal-teacher-image" src="co-ngan.png" alt="Teacher">
+            <h2>🎉 XIN CHÚC MỪNG 🎉</h2>
+            <p id="modal-answer-text"></p>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageDisplay = document.getElementById('message');
+        const questionBoxes = document.querySelectorAll('.question');
+        const finalAnswerBoxes = document.querySelectorAll('.final-answer-box');
+        const submitBtn = document.getElementById('submit-btn');
+        const showAnswerBtn = document.getElementById('show-answer-btn');
+        
+        // NEW MODAL REFERENCES
+        const successModal = document.getElementById('success-modal');
+        const modalAnswerText = document.getElementById('modal-answer-text');
+
+        // --- SOUND EFFECTS SETUP ---
+        const soundStart = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/28963/start_game.mp3');
+        const soundSuccess = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/28963/success.mp3');
+        const soundFail = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/28963/fail.mp3');
+        const soundCheckpointBlip = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/28963/blip.mp3');
+
+        // Pre-load the audio (optional but helpful)
+        soundStart.load();
+        soundSuccess.load();
+        soundFail.load();
+        soundCheckpointBlip.load();
+
+
+        const CANVAS_WIDTH = 1000;
+        const CANVAS_HEIGHT = 900;
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        // CSS offsets
+        const CANVAS_OFFSET_X = 200; 
+        const CANVAS_OFFSET_Y = 0;   
+        
+        // Path/Drawing Constants
+        const PATH_LINE_WIDTH = 50; 
+        const segmentDrawDuration = 2000; 
+        const CHECKPOINT_RADIUS = 20;
+        const HITBOX_TOLERANCE = 0.3; 
+
+        // Color mapping
+        const COLOR_MAP = {
+            "q-10x5": { base: "rgba(229, 115, 115, 0.6)", highlight: "#FF0000" }, // Red
+            "q-15x4": { base: "rgba(129, 199, 132, 0.6)", highlight: "#00FF00" }, // Green
+            "q-5+7": { base: "rgba(100, 181, 246, 0.6)", highlight: "#0000FF" }, // Blue
+            "q-8+6": { base: "rgba(255, 213, 79, 0.6)", highlight: "#FFA500" }  // Orange
+        };
+
+        let selectedQuestion = null;
+        let isPathAnimating = false;
+        let animationFrameId = null;
+        let currentPathIndex = 0; 
+        let startTime = null; 
+        let checkpointsPassed = new Set(); 
+        
+        const BOX_ELEMENTS = {};
+        document.querySelectorAll('.box').forEach(box => { BOX_ELEMENTS[box.id] = box; });
+
+        // --- NEW STATE MANAGEMENT ---
+        // Store the user's chosen answer for each question ID
+        const userAnswers = {
+            'q-10x5': null, 
+            'q-15x4': null,
+            'q-5+7': null,
+            'q-8+6': null,
+        };
+        const FINAL_BOX_MAP = {
+            'q-10x5': 'fb-0', 
+            'q-15x4': 'fb-1',
+            'q-5+7': 'fb-2',
+            'q-8+6': 'fb-3',
+        };
+
+        // --- Path Definitions (Same Grid-Locked paths) ---
+        const PATHS = {
+            "q-10x5": { 
+                color: COLOR_MAP["q-10x5"],
+                points: [
+                    { x: 0, y: 50 }, 
+                    { x: 300, y: 50 }, 
+                    { x: 300, y: 700 }, 
+                    { x: 800, y: 700 }, 
+                    { x: 800, y: 50 }, 
+                    { x: 950, y: 50 }
+                ], 
+                finalBoxID: 'fb-0' 
+            }, 
+            "q-15x4": { 
+                color: COLOR_MAP["q-15x4"],
+                points: [
+                    { x: 0, y: 250 }, 
+                    { x: 100, y: 250 }, 
+                    { x: 100, y: 800 }, 
+                    { x: 600, y: 800 }, 
+                    { x: 600, y: 250 }, 
+                    { x: 950, y: 250 } 
+                ], 
+                finalBoxID: 'fb-1' 
+            },
+            "q-5+7": { 
+                color: COLOR_MAP["q-5+7"],
+                points: [
+                    { x: 0, y: 450 }, 
+                    { x: 200, y: 450 }, 
+                    { x: 200, y: 150 }, 
+                    { x: 750, y: 150 }, 
+                    { x: 750, y: 450 }, 
+                    { x: 950, y: 450 } 
+                ], 
+                finalBoxID: 'fb-2' 
+            },
+            "q-8+6": { 
+                color: COLOR_MAP["q-8+6"],
+                points: [
+                    { x: 0, y: 650 }, 
+                    { x: 450, y: 650 }, 
+                    { x: 450, y: 100 }, 
+                    { x: 900, y: 100 }, 
+                    { x: 900, y: 850 }, 
+                    { x: 950, y: 850 } 
+                ], 
+                finalBoxID: 'fb-3' 
+            }
+        };
+
+        // --- Checkpoint Cleanup for Shared Locations ---
+        const INTERSECTION_POINTS = {
+            '100,450': { x: 100, y: 450, val: "19", paths: ["q-15x4", "q-5+7"] },
+            '300,650': { x: 300, y: 650, val: "14", paths: ["q-10x5", "q-8+6"] },
+            '450,150': { x: 450, y: 150, val: "12", paths: ["q-5+7", "q-8+6"] },
+            '750,250': { x: 750, y: 250, val: "60", paths: ["q-15x4", "q-5+7"] },
+            '800,100': { x: 800, y: 100, val: "48", paths: ["q-10x5", "q-8+6"] },
+            '900,450': { x: 900, y: 450, val: "35", paths: ["q-5+7", "q-8+6"] }
+        };
+
+        const CHECKPOINTS = [
+            { id: 1, qID: "q-10x5", val: "15", segIndex: 0, t: 0.65 },
+            { id: 2, qID: "q-10x5", val: "50", segIndex: 1, t: 0.35 },
+
+            { id: 8, qID: "q-15x4", val: "30", segIndex: 2, t: 0.5 },
+            { id: 9, qID: "q-15x4", val: "40", segIndex: 3, t: 0.5 },
+
+
+            // (100,450) q-15x4 × q-5+7
+            { id: 1, qID: "q-15x4", val: "19", segIndex: 1, t: 0.364, isShared: true },
+            { id: 2, qID: "q-5+7",  val: "19", segIndex: 0, t: 0.500, isShared: true },
+
+            // (300,650) q-10x5 × q-8+6
+            { id: 7, qID: "q-10x5", val: "14", segIndex: 1, t: 0.857, isShared: true },
+            { id: 8, qID: "q-8+6",  val: "14", segIndex: 0, t: 0.667, isShared: true },
+
+            // (450,150) q-5+7 × q-8+6
+            { id: 9, qID: "q-5+7",  val: "12", segIndex: 2, t: 0.333, isShared: true },
+            { id: 10, qID: "q-8+6", val: "12", segIndex: 1, t: 0.625, isShared: true },
+
+            // (750,250) q-15x4 × q-5+7
+            { id: 13, qID: "q-15x4", val: "60", segIndex: 4, t: 0.333, isShared: true },
+            { id: 14, qID: "q-5+7",  val: "60", segIndex: 3, t: 0.250, isShared: true },
+
+            // (800,100) q-10x5 × q-8+6
+            { id: 15, qID: "q-10x5", val: "48", segIndex: 3, t: 0.85, isShared: true },
+            { id: 16, qID: "q-8+6",  val: "48", segIndex: 2, t: 0.389, isShared: true },
+
+            // (900,450) q-5+7 × q-8+6
+            { id: 23, qID: "q-5+7",  val: "35", segIndex: 4, t: 0.750, isShared: true },
+            { id: 24, qID: "q-8+6",  val: "35", segIndex: 3, t: 0.467, isShared: true }
+        ];
+
+        function getCheckpointCanvasPosition(cp) {
+            const pathDef = PATHS[cp.qID];
+            const startPoint = pathDef.points[cp.segIndex];
+            const endPoint = pathDef.points[cp.segIndex + 1];
+
+            const x = startPoint.x + (endPoint.x - startPoint.x) * cp.t;
+            const y = startPoint.y + (endPoint.y - startPoint.y) * cp.t;
+            return { x, y };
+        }
+
+        // --- Positioning Logic ---
+        function placeElements() {
+            for (const qID in PATHS) {
+                const pathDef = PATHS[qID];
+                const startPoint = pathDef.points[0];
+                const endPoint = pathDef.points[pathDef.points.length - 1];
+                
+                const qBox = BOX_ELEMENTS[qID];
+                qBox.style.left = `${CANVAS_OFFSET_X + startPoint.x - 180}px`; 
+                qBox.style.top = `${CANVAS_OFFSET_Y + startPoint.y - 30}px`; 
+
+                const fbBox = BOX_ELEMENTS[pathDef.finalBoxID];
+                fbBox.style.left = `${CANVAS_OFFSET_X + endPoint.x + 30}px`; 
+                fbBox.style.top = `${CANVAS_OFFSET_Y + endPoint.y - 30}px`; 
+            }
+        }
+
+        // --- Drawing Functions (No changes needed for base drawing) ---
+        function clearCanvas() { ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); }
+
+        function drawPathSegments(pathDefinition, color, lineWidth, startSegment, endSegment, progress = 1) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = (color === pathDefinition.color.base) ? 'round' : 'butt'; 
+            ctx.lineJoin = 'miter'; 
+            
+            if (color === pathDefinition.color.base) {
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                ctx.shadowBlur = 10;
+            } else {
+                ctx.shadowColor = pathDefinition.color.highlight;
+                ctx.shadowBlur = 15;
+            }
+
+            ctx.beginPath();
+            
+            ctx.moveTo(pathDefinition.points[startSegment].x, pathDefinition.points[startSegment].y);
+            
+            for (let i = startSegment + 1; i < pathDefinition.points.length; i++) {
+                if (i <= endSegment) {
+                    ctx.lineTo(pathDefinition.points[i].x, pathDefinition.points[i].y);
+                } else if (i === endSegment + 1 && progress > 0) {
+                    const startPoint = pathDefinition.points[endSegment];
+                    const endPoint = pathDefinition.points[endSegment + 1];
+
+                    const currentX = startPoint.x + (endPoint.x - startPoint.x) * progress;
+                    const currentY = startPoint.y + (endPoint.y - startPoint.y) * progress;
+                    
+                    ctx.lineTo(currentX, currentY);
+                    break;
+                }
+            }
+            
+            ctx.stroke();
+            ctx.shadowBlur = 0; 
+        }
+        
+        function drawCheckpoint(x, y, val) {
+            ctx.font = "bold 24px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            
+            let checkpointFill = "rgba(255, 255, 255, 0.9)"; 
+            let checkpointText = "#000000";
+
+            // 1. Draw the circle 
+            ctx.beginPath();
+            ctx.arc(x, y, CHECKPOINT_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = checkpointFill;
+            ctx.fill();
+            
+            // 2. Draw the number with a white stroke (Underpass Effect)
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 5;
+
+            ctx.strokeText(val, x, y); 
+            
+            ctx.shadowBlur = 0; 
+            ctx.fillStyle = checkpointText;
+            ctx.fillText(val, x, y); 
+        }
+
+        function drawAllCheckpoints() {
+            const drawnLocations = {}; 
+
+            // First, process and draw shared intersection checkpoints
+            for (const key in INTERSECTION_POINTS) {
+                const ip = INTERSECTION_POINTS[key];
+                drawCheckpoint(ip.x, ip.y, ip.val);
+                drawnLocations[`${ip.x},${ip.y}`] = true;
+            }
+            
+            // Second, process and draw unique non-intersection checkpoints
+            CHECKPOINTS.filter(cp => !cp.isShared).forEach(cp => {
+                const pos = getCheckpointCanvasPosition(cp);
+                
+                if (!drawnLocations[`${Math.round(pos.x)},${Math.round(pos.y)}`]) {
+                    drawCheckpoint(pos.x, pos.y, cp.val);
+                }
+            });
+        }
+        
+        // --- Core Drawing Loop ---
+        function drawAllPaths() {
+            clearCanvas();
+            // 1. Draw all paths using their distinct base colors
+            for (const qKey in PATHS) {
+                const pathDef = PATHS[qKey];
+                drawPathSegments(pathDef, pathDef.color.base, PATH_LINE_WIDTH, 0, pathDef.points.length - 1, 1);
+            }
+            // 2. Draw all checkpoints (Answers)
+            drawAllCheckpoints();
+        }
+
+        // --- Animation / Game Logic ---
+        function resetGame(fullReset = true) {
+            cancelAnimationFrame(animationFrameId);
+            isPathAnimating = false;
+            currentPathIndex = 0;
+            startTime = null;
+            checkpointsPassed.clear(); 
+            successModal.style.display = 'none'; 
+            
+            if (fullReset) {
+                questionBoxes.forEach(q => q.classList.remove('selected'));
+                selectedQuestion = null;
+                messageDisplay.textContent = '';
+            }
+            drawAllPaths(); 
+        }
+
+        function animatePathStep(timestamp) {
+            if (!startTime) startTime = timestamp; 
+            const elapsed = timestamp - startTime;
+
+            if (!isPathAnimating || !selectedQuestion) {
+                cancelAnimationFrame(animationFrameId);
+                return;
+            }
+
+            const pathDef = PATHS[selectedQuestion.id];
+            
+            // --- Calculate Progress ---
+            const segmentCount = pathDef.points.length - 1;
+            const totalPathDuration = segmentDrawDuration * segmentCount;
+            
+            const progressRatio = elapsed / totalPathDuration; 
+            
+            let completedSegments = Math.floor(elapsed / segmentDrawDuration);
+            let currentSegmentProgress = (elapsed % segmentDrawDuration) / segmentDrawDuration;
+
+            completedSegments = Math.min(completedSegments, segmentCount); 
+            
+            currentPathIndex = completedSegments; 
+
+            // --- Redraw Scene ---
+            drawAllPaths(); 
+
+            // 2. Draw the illuminated path (the actual moving light)
+            let drawEndIndex = completedSegments;
+            let progressToDraw = (drawEndIndex === segmentCount) ? 1 : currentSegmentProgress;
+
+            drawPathSegments(pathDef, pathDef.color.highlight, PATH_LINE_WIDTH - 15, 0, drawEndIndex, progressToDraw);
+
+            // 3. Redraw the checkpoints again 
+            drawAllCheckpoints();
+            
+            // --- Checkpoint Sound Logic ---
+            const activePathCheckpoints = CHECKPOINTS.filter(c => c.qID === selectedQuestion.id);
+            activePathCheckpoints.forEach(cp => {
+                // If on the completed segment OR on the current segment and passed 't'
+                const hasPassed = (cp.segIndex < completedSegments) || 
+                                  (cp.segIndex === completedSegments && currentSegmentProgress >= cp.t);
+                
+                if (hasPassed && !checkpointsPassed.has(cp.id)) {
+                    soundCheckpointBlip.currentTime = 0;
+                    soundCheckpointBlip.play().catch(e => {}); 
+                    checkpointsPassed.add(cp.id);
+                }
+            });
+
+            // Check for path end 
+            if (progressRatio >= 1.05) { 
+                // messageDisplay.textContent = "Hành trình đã kết thúc. Hãy chọn một câu hỏi khác để tiếp tục chọn đáp án.";
+                setTimeout(() => resetGame(true), 0);
+                return;
+            }
+
+            animationFrameId = requestAnimationFrame(animatePathStep);
+        }
+
+        // --- New Logic: Find and Display Chosen Answer ---
+        function handleKeypress(event) {
+            if (event.key !== ' ' || !isPathAnimating || !selectedQuestion) return;
+
+            event.preventDefault(); 
+            
+            cancelAnimationFrame(animationFrameId);
+            isPathAnimating = false;
+
+            const activeSegmentIndex = currentPathIndex; 
+            
+            const relevantCheckpoints = CHECKPOINTS.filter(c => c.qID === selectedQuestion.id);
+
+            let chosenCheckpointValue = null;
+            // Calculate the progress through the segment at the moment the key was pressed
+            let finalSegmentProgress = (performance.now() - startTime) % segmentDrawDuration / segmentDrawDuration;
+
+            // Check if the light is near a checkpoint
+            relevantCheckpoints.forEach(cp => {
+                
+                if (cp.segIndex === activeSegmentIndex) {
+                    if (finalSegmentProgress >= cp.t - HITBOX_TOLERANCE && finalSegmentProgress <= cp.t + HITBOX_TOLERANCE) {
+                        
+                        const cpPos = getCheckpointCanvasPosition(cp);
+                        let checkpointValue = cp.val; // Default to unique value
+                        
+                        // Check for intersection points to get the correct shared value
+                        for(const key in INTERSECTION_POINTS) {
+                            if (INTERSECTION_POINTS[key].x === Math.round(cpPos.x) && INTERSECTION_POINTS[key].y === Math.round(cpPos.y)) {
+                                checkpointValue = INTERSECTION_POINTS[key].val;
+                                break;
+                            }
+                        }
+                        
+                        chosenCheckpointValue = checkpointValue; 
+                    }
+                }
+            });
+            
+            if (chosenCheckpointValue) {
+                // --- NEW LOGIC: Store and Display Chosen Answer ---
+                const qID = selectedQuestion.id;
+                userAnswers[qID] = chosenCheckpointValue;
+                const finalBox = BOX_ELEMENTS[FINAL_BOX_MAP[qID]];
+                finalBox.querySelector('.answer-content').textContent = chosenCheckpointValue;
+                
+                // Clear any previous result icon
+                finalBox.querySelectorAll('.result-icon').forEach(icon => icon.remove());
+                const chosenIcon = document.createElement('span');
+                chosenIcon.classList.add('result-icon', 'correct');
+                chosenIcon.textContent = '⭐';
+                finalBox.appendChild(chosenIcon);
+                
+                // messageDisplay.textContent = `✅ Con đã chọn đáp án ${chosenCheckpointValue} cho câu hỏi "${selectedQuestion.dataset.qKey}". Hãy chọn câu hỏi khác hoặc nhấn "Nộp đáp án" khi hoàn thành.`;
+            
+                soundCheckpointBlip.currentTime = 0;
+                soundCheckpointBlip.play().catch(e => {}); 
+                
+                updateSubmitButtonState();
+            } else {
+                // messageDisplay.textContent = "Con đã bỏ lỡ mục tiêu! Hãy chọn lại câu hỏi và thử lại.";
+                soundFail.currentTime = 0;
+                soundFail.play().catch(e => {});
+            }
+            
+            // Re-draw immediately to show final state 
+            drawAllPaths();
+            
+            setTimeout(() => resetGame(true), 0);
+        }
+
+        function handleQuestionClick(event) {
+            const questionID = event.currentTarget.id;
+            
+            if (isPathAnimating) return; 
+
+            resetGame(false); 
+            
+            selectedQuestion = event.currentTarget;
+            selectedQuestion.classList.add('selected');
+
+            isPathAnimating = true;
+            currentPathIndex = 0;
+            startTime = null; 
+            
+            // Play start sound
+            soundStart.currentTime = 0;
+            soundStart.play().catch(e => console.log("Audio Autoplay Blocked:", e));
+            
+            // messageDisplay.textContent = `Hành trình tìm đáp án cho câu hỏi "${selectedQuestion.dataset.qKey}" đã bắt đầu. Hãy nhấn phím cách (Spacebar) khi đến đáp án!`;
+            
+            animationFrameId = requestAnimationFrame(animatePathStep);
+        }
+
+        function updateSubmitButtonState() {
+            const allAnswered = Object.values(userAnswers).every(answer => answer !== null);
+            submitBtn.disabled = !allAnswered;
+        }
+
+        // --- Grading and Submission Logic ---
+        function handleSubmit() {
+            if (submitBtn.disabled) return;
+            
+            let allCorrect = true;
+            
+            // 1. Grade all answers
+            questionBoxes.forEach(qBox => {
+                const qID = qBox.id;
+                const finalBox = BOX_ELEMENTS[FINAL_BOX_MAP[qID]];
+                const correctVal = qBox.dataset.correctVal;
+                const chosenVal = userAnswers[qID];
+                
+                // Clear previous icons
+                finalBox.querySelectorAll('.result-icon').forEach(icon => icon.remove());
+                
+                let icon = document.createElement('span');
+                icon.classList.add('result-icon');
+                
+                if (chosenVal === correctVal) {
+                    icon.classList.add('correct');
+                    icon.textContent = '✅';
+                } else {
+                    icon.classList.add('wrong');
+                    icon.textContent = '❌';
+                    allCorrect = false;
+                }
+                
+                finalBox.appendChild(icon);
+            });
+            
+            // 2. Show congratulation message on finish (regardless of correctness)
+            soundSuccess.currentTime = 0;
+            soundSuccess.play().catch(e => {}); 
+
+            modalAnswerText.textContent = allCorrect 
+                ? "BÀI LÀM HOÀN HẢO! Chúc mừng con đã hoàn thành tất cả."
+                : "Con đã hoàn thành, hãy xem lại các câu trả lời bị đánh dấu '❌' và sửa lại nhé!";
+
+            successModal.style.display = 'block';
+
+            // 3. Update buttons
+            submitBtn.style.display = 'none';
+            showAnswerBtn.style.display = 'block';
+            
+            // Disable question selection after submission
+            questionBoxes.forEach(q => q.removeEventListener('click', handleQuestionClick));
+            document.removeEventListener('keydown', handleKeypress);
+            document.querySelectorAll('[id$="-marker"]').forEach(marker => marker.remove());
+        }
+
+        function handleShowAnswer() {
+            questionBoxes.forEach(qBox => {
+                const qID = qBox.id;
+                const finalBox = BOX_ELEMENTS[FINAL_BOX_MAP[qID]];
+                const correctVal = qBox.dataset.correctVal;
+
+                // Clear user answer and show correct answer
+                finalBox.querySelector('.answer-content').textContent = correctVal;
+                
+                // Set the correct icon
+                finalBox.querySelectorAll('.result-icon').forEach(icon => icon.remove());
+                let icon = document.createElement('span');
+                icon.classList.add('result-icon', 'correct');
+                icon.textContent = '✅';
+                finalBox.appendChild(icon);
+            });
+
+            // messageDisplay.textContent = "Đây là đáp án chính xác cho tất cả các câu hỏi.";
+            showAnswerBtn.disabled = true;
+        }
+
+        // --- Initialization ---
+        
+        placeElements(); 
+
+        questionBoxes.forEach(box => {
+            box.addEventListener('click', handleQuestionClick);
+        });
+        
+        document.addEventListener('keydown', handleKeypress);
+        submitBtn.addEventListener('click', handleSubmit);
+        showAnswerBtn.addEventListener('click', handleShowAnswer);
+        successModal.addEventListener('click', () => successModal.style.display = 'none'); // Close modal on click
+
+        drawAllPaths();
+        updateSubmitButtonState(); // Initial check for submit button state
+    </script>
+</body>
+</html>
