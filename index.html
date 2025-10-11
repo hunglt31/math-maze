@@ -243,17 +243,18 @@
         const modalAnswerText = document.getElementById('modal-answer-text');
 
         // --- SOUND EFFECTS SETUP ---
-        const soundStart = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/28963/start_game.mp3');
-        const soundSuccess = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/28963/success.mp3');
-        const soundFail = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/28963/fail.mp3');
-        const soundCheckpointBlip = new Audio('https://s3-us-west-2.amazonaws.com/s.cdpn.io/28963/blip.mp3');
+        const soundStart = new Audio('tingting.mp3');
+        const soundSuccess = new Audio('success-340660.mp3');
+        const soundFail = new Audio('fail-234710.mp3');
+        const soundCheckpointBlip = new Audio('blip-131856.mp3');
+        const soundSelect = new Audio('sharp-pop-328170.mp3');
 
         // Pre-load the audio (optional but helpful)
         soundStart.load();
         soundSuccess.load();
         soundFail.load();
         soundCheckpointBlip.load();
-
+        soundSelect.load();
 
         const CANVAS_WIDTH = 1000;
         const CANVAS_HEIGHT = 900;
@@ -284,6 +285,7 @@
         let currentPathIndex = 0; 
         let startTime = null; 
         let checkpointsPassed = new Set(); 
+        let currentSegmentProgress = 0;
         
         const BOX_ELEMENTS = {};
         document.querySelectorAll('.box').forEach(box => { BOX_ELEMENTS[box.id] = box; });
@@ -358,19 +360,19 @@
         // --- Checkpoint Cleanup for Shared Locations ---
         const INTERSECTION_POINTS = {
             '100,450': { x: 100, y: 450, val: "19", paths: ["q-15x4", "q-5+7"] },
-            '300,650': { x: 300, y: 650, val: "14", paths: ["q-10x5", "q-8+6"] },
+            '300,650': { x: 300, y: 650, val: "68", paths: ["q-10x5", "q-8+6"] },
             '450,150': { x: 450, y: 150, val: "12", paths: ["q-5+7", "q-8+6"] },
-            '750,250': { x: 750, y: 250, val: "60", paths: ["q-15x4", "q-5+7"] },
+            '750,250': { x: 750, y: 250, val: "35", paths: ["q-15x4", "q-5+7"] },
             '800,100': { x: 800, y: 100, val: "48", paths: ["q-10x5", "q-8+6"] },
-            '900,450': { x: 900, y: 450, val: "35", paths: ["q-5+7", "q-8+6"] }
+            '900,450': { x: 900, y: 450, val: "14", paths: ["q-5+7", "q-8+6"] }
         };
 
         const CHECKPOINTS = [
             { id: 1, qID: "q-10x5", val: "15", segIndex: 0, t: 0.65 },
             { id: 2, qID: "q-10x5", val: "50", segIndex: 1, t: 0.35 },
 
-            { id: 8, qID: "q-15x4", val: "30", segIndex: 2, t: 0.5 },
-            { id: 9, qID: "q-15x4", val: "40", segIndex: 3, t: 0.5 },
+            { id: 8, qID: "q-15x4", val: "60", segIndex: 2, t: 0.5 },
+            { id: 9, qID: "q-15x4", val: "70", segIndex: 3, t: 0.5 },
 
 
             // (100,450) q-15x4 × q-5+7
@@ -378,24 +380,24 @@
             { id: 2, qID: "q-5+7",  val: "19", segIndex: 0, t: 0.500, isShared: true },
 
             // (300,650) q-10x5 × q-8+6
-            { id: 7, qID: "q-10x5", val: "14", segIndex: 1, t: 0.857, isShared: true },
-            { id: 8, qID: "q-8+6",  val: "14", segIndex: 0, t: 0.667, isShared: true },
+            { id: 7, qID: "q-10x5", val: "68", segIndex: 1, t: 0.857, isShared: true },
+            { id: 8, qID: "q-8+6",  val: "68", segIndex: 0, t: 0.667, isShared: true },
 
             // (450,150) q-5+7 × q-8+6
             { id: 9, qID: "q-5+7",  val: "12", segIndex: 2, t: 0.333, isShared: true },
-            { id: 10, qID: "q-8+6", val: "12", segIndex: 1, t: 0.625, isShared: true },
+            { id: 10, qID: "q-8+6", val: "12", segIndex: 1, t: 0.85, isShared: true },
 
             // (750,250) q-15x4 × q-5+7
-            { id: 13, qID: "q-15x4", val: "60", segIndex: 4, t: 0.333, isShared: true },
-            { id: 14, qID: "q-5+7",  val: "60", segIndex: 3, t: 0.250, isShared: true },
+            { id: 13, qID: "q-15x4", val: "35", segIndex: 4, t: 0.333, isShared: true },
+            { id: 14, qID: "q-5+7",  val: "35", segIndex: 3, t: 0.250, isShared: true },
 
             // (800,100) q-10x5 × q-8+6
             { id: 15, qID: "q-10x5", val: "48", segIndex: 3, t: 0.85, isShared: true },
-            { id: 16, qID: "q-8+6",  val: "48", segIndex: 2, t: 0.389, isShared: true },
+            { id: 16, qID: "q-8+6",  val: "48", segIndex: 2, t: 0.775, isShared: true },
 
             // (900,450) q-5+7 × q-8+6
-            { id: 23, qID: "q-5+7",  val: "35", segIndex: 4, t: 0.750, isShared: true },
-            { id: 24, qID: "q-8+6",  val: "35", segIndex: 3, t: 0.467, isShared: true }
+            { id: 23, qID: "q-5+7",  val: "14", segIndex: 4, t: 0.750, isShared: true },
+            { id: 24, qID: "q-8+6",  val: "14", segIndex: 3, t: 0.467, isShared: true }
         ];
 
         function getCheckpointCanvasPosition(cp) {
@@ -559,7 +561,8 @@
             const progressRatio = elapsed / totalPathDuration; 
             
             let completedSegments = Math.floor(elapsed / segmentDrawDuration);
-            let currentSegmentProgress = (elapsed % segmentDrawDuration) / segmentDrawDuration;
+            // let currentSegmentProgress = (elapsed % segmentDrawDuration) / segmentDrawDuration;
+            currentSegmentProgress = (elapsed % segmentDrawDuration) / segmentDrawDuration;
 
             completedSegments = Math.min(completedSegments, segmentCount); 
             
@@ -616,7 +619,8 @@
 
             let chosenCheckpointValue = null;
             // Calculate the progress through the segment at the moment the key was pressed
-            let finalSegmentProgress = (performance.now() - startTime) % segmentDrawDuration / segmentDrawDuration;
+            // let finalSegmentProgress = (performance.now() - startTime) % segmentDrawDuration / segmentDrawDuration;
+            let finalSegmentProgress = currentSegmentProgress;
 
             // Check if the light is near a checkpoint
             relevantCheckpoints.forEach(cp => {
@@ -656,8 +660,8 @@
                 
                 // messageDisplay.textContent = `✅ Con đã chọn đáp án ${chosenCheckpointValue} cho câu hỏi "${selectedQuestion.dataset.qKey}". Hãy chọn câu hỏi khác hoặc nhấn "Nộp đáp án" khi hoàn thành.`;
             
-                soundCheckpointBlip.currentTime = 0;
-                soundCheckpointBlip.play().catch(e => {}); 
+                soundSelect.currentTime = 0;
+                soundSelect.play().catch(e => {}); 
                 
                 updateSubmitButtonState();
             } else {
@@ -736,8 +740,8 @@
             soundSuccess.play().catch(e => {}); 
 
             modalAnswerText.textContent = allCorrect 
-                ? "BÀI LÀM HOÀN HẢO! Chúc mừng con đã hoàn thành tất cả."
-                : "Con đã hoàn thành, hãy xem lại các câu trả lời bị đánh dấu '❌' và sửa lại nhé!";
+                ? "Chúc mừng con! Con đã hoàn thành xuất sắc tất cả các câu hỏi."
+                : "Con đã hoàn thành! Hãy xem lại những câu còn ❌ và thử làm lại nhé.";
 
             successModal.style.display = 'block';
 
