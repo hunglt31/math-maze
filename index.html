@@ -51,9 +51,9 @@
         
         /* Specific colors for Question Boxes */
         #q-10x5.selected { background-color: #D32F2F; } 
+        #q-7\+5.selected { background-color: #1976D2; } 
+        #q-6\+8.selected { background-color: #F57C00; } 
         #q-15x4.selected { background-color: #388E3C; } 
-        #q-5\+7.selected { background-color: #1976D2; } 
-        #q-8\+6.selected { background-color: #F57C00; } 
 
         .final-answer-box {
             background-color: #1e88e5; 
@@ -138,57 +138,97 @@
         #show-answer-btn:hover { background-color: #FFB300; transform: translateY(-2px); }
 
         /* --- NEW MODAL STYLES --- */
-        #success-modal {
-            display: none; 
+        .modal {
+            display: none;
             position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
+            z-index: 999;
+            inset: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.7); 
+            background: radial-gradient(circle at center, rgba(0,0,0,0.5), rgba(0,0,0,0.8));
+            backdrop-filter: blur(6px);
+            animation: fadeIn 0.3s ease-in-out;
         }
 
-        #modal-content {
-            background-color: #ffffff;
-            margin: 15% auto; 
-            padding: 40px;
-            border: 1px solid #888;
-            width: 50%; 
-            border-radius: 20px;
+        .modal-content {
+            background: linear-gradient(180deg, #ffffff, #f5f5f5);
+            margin: 6% auto;
+            padding: 50px 40px;
+            border-radius: 40px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.5s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+            width: 600px;
+            max-width: 90vw;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative;
+            animation: popUp 0.35s ease-in-out;
+            transform-origin: center;
         }
 
-        #modal-content h2 {
-            color: #388E3C; 
-            font-size: 2.5em;
-            margin-bottom: 20px;
-        }
-        
-        #modal-teacher-image {
-            width: 150px;
-            height: 150px;
+        /* 🔵 Big circular hero image */
+        .modal-content img {
+            width: 260px;
+            height: 260px;
             border-radius: 50%;
             object-fit: cover;
-            margin-bottom: 20px;
-            border: 5px solid #4CAF50;
+            border: 10px solid #fff;
+            box-shadow: 0 0 25px rgba(0,0,0,0.25);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
         }
 
-        #modal-answer-text {
-            font-size: 1.8em;
-            color: #1976D2;
+        .modal-content img:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        /* ✨ Title */
+        .modal-content h2 {
+            font-size: 3rem;
+            color: #2E7D32;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.15);
+        }
+
+        /* 📝 Text */
+        .modal-content p {
+            font-size: 2rem;
+            color: #333;
+            line-height: 1.6;
+            font-weight: 600;
+            margin: 0 auto;
+            max-width: 500px;
+        }
+
+        /* ❌ Close button */
+        .close {
+            position: absolute;
+            right: 25px;
+            top: 15px;
+            color: #666;
+            font-size: 36px;
             font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        /* 🌀 Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
+
 <body>
     <h1>Nexus Maze 🔗</h1>
 
@@ -198,9 +238,9 @@
         <canvas id="mazeCanvas"></canvas>
 
         <div class="box question" id="q-10x5" data-q-key="10 gấp 5 lần" data-correct-val="50">10 gấp 5 lần</div>
+        <div class="box question" id="q-7+5" data-q-key="7 thêm 5 đơn vị" data-correct-val="12">7 thêm 5 đơn vị</div>
+        <div class="box question" id="q-6+8" data-q-key="6 thêm 8 đơn vị" data-correct-val="14">6 thêm 8 đơn vị</div>
         <div class="box question" id="q-15x4" data-q-key="15 gấp 4 lần" data-correct-val="60">15 gấp 4 lần</div>
-        <div class="box question" id="q-5+7" data-q-key="7 thêm 5 đơn vị" data-correct-val="12">7 thêm 5 đơn vị</div>
-        <div class="box question" id="q-8+6" data-q-key="6 thêm 8 đơn vị" data-correct-val="14">6 thêm 8 đơn vị</div>
         
         <div class="box final-answer-box" id="fb-0">
             <span class="answer-content">?</span>
@@ -222,32 +262,40 @@
         <button id="show-answer-btn" class="control-btn">Xem đáp án</button>
     </div>
 
-    <div id="success-modal">
-        <div id="modal-content">
-            <img id="modal-teacher-image" src="co-ngan.png" alt="Teacher">
-            <h2>🎉 XIN CHÚC MỪNG 🎉</h2>
-            <p id="modal-answer-text"></p>
+    <!-- ✅ SUCCESS MODAL -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('successModal')">&times;</span>
+            <h2 id="successTitle">🎉 Chính xác!</h2>
+            <img id="successImage" src="" alt="Success Image">
+            <p id="successText"></p>
         </div>
     </div>
+
+    <!-- ❌ NICE TRY MODAL -->
+    <div id="niceTryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('niceTryModal')">&times;</span>
+            <h2>🤗 Chưa đúng!</h2>
+            <img src="images/co-ngan.png" alt="Nice Try Image">
+            <p id="niceTryText">Đáp án chưa chính xác! Con hãy thử lại nhé!</p>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('mazeCanvas');
         const ctx = canvas.getContext('2d');
-        const messageDisplay = document.getElementById('message');
         const questionBoxes = document.querySelectorAll('.question');
         const finalAnswerBoxes = document.querySelectorAll('.final-answer-box');
         const submitBtn = document.getElementById('submit-btn');
         const showAnswerBtn = document.getElementById('show-answer-btn');
-        
-        // NEW MODAL REFERENCES
-        const successModal = document.getElementById('success-modal');
-        const modalAnswerText = document.getElementById('modal-answer-text');
 
         // --- SOUND EFFECTS SETUP ---
-        const soundStart = new Audio('tingting.mp3');
-        const soundSuccess = new Audio('success-340660.mp3');
-        const soundFail = new Audio('fail-234710.mp3');
-        const soundCheckpointBlip = new Audio('blip-131856.mp3');
-        const soundSelect = new Audio('sharp-pop-328170.mp3');
+        const soundStart = new Audio('sounds/tingting.mp3');
+        const soundSuccess = new Audio('sounds/success-340660.mp3');
+        const soundFail = new Audio('sounds/fail-234710.mp3');
+        const soundCheckpointBlip = new Audio('sounds/blip-131856.mp3');
+        const soundSelect = new Audio('sounds/sharp-pop-328170.mp3');
 
         // Pre-load the audio (optional but helpful)
         soundStart.load();
@@ -274,9 +322,9 @@
         // Color mapping
         const COLOR_MAP = {
             "q-10x5": { base: "rgba(229, 115, 115, 0.6)", highlight: "#FF0000" }, // Red
-            "q-15x4": { base: "rgba(129, 199, 132, 0.6)", highlight: "#00FF00" }, // Green
-            "q-5+7": { base: "rgba(100, 181, 246, 0.6)", highlight: "#0000FF" }, // Blue
-            "q-8+6": { base: "rgba(255, 213, 79, 0.6)", highlight: "#FFA500" }  // Orange
+            "q-7+5": { base: "rgba(100, 181, 246, 0.6)", highlight: "#0000FF" }, // Blue
+            "q-6+8": { base: "rgba(255, 213, 79, 0.6)", highlight: "#FFA500" }, // Orange
+            "q-15x4": { base: "rgba(129, 199, 132, 0.6)", highlight: "#00FF00" } // Green
         };
 
         let selectedQuestion = null;
@@ -294,15 +342,16 @@
         // Store the user's chosen answer for each question ID
         const userAnswers = {
             'q-10x5': null, 
+            'q-7+5': null,
+            'q-6+8': null,
             'q-15x4': null,
-            'q-5+7': null,
-            'q-8+6': null,
         };
         const FINAL_BOX_MAP = {
             'q-10x5': 'fb-0', 
-            'q-15x4': 'fb-1',
-            'q-5+7': 'fb-2',
-            'q-8+6': 'fb-3',
+            'q-7+5': 'fb-1',
+            'q-6+8': 'fb-2',
+            'q-15x4': 'fb-3',
+
         };
 
         // --- Path Definitions (Same Grid-Locked paths) ---
@@ -319,8 +368,8 @@
                 ], 
                 finalBoxID: 'fb-0' 
             }, 
-            "q-15x4": { 
-                color: COLOR_MAP["q-15x4"],
+            "q-7+5": { 
+                color: COLOR_MAP["q-7+5"],
                 points: [
                     { x: 0, y: 250 }, 
                     { x: 100, y: 250 }, 
@@ -331,8 +380,8 @@
                 ], 
                 finalBoxID: 'fb-1' 
             },
-            "q-5+7": { 
-                color: COLOR_MAP["q-5+7"],
+            "q-6+8": { 
+                color: COLOR_MAP["q-6+8"],
                 points: [
                     { x: 0, y: 450 }, 
                     { x: 200, y: 450 }, 
@@ -343,8 +392,8 @@
                 ], 
                 finalBoxID: 'fb-2' 
             },
-            "q-8+6": { 
-                color: COLOR_MAP["q-8+6"],
+            "q-15x4": { 
+                color: COLOR_MAP["q-15x4"],
                 points: [
                     { x: 0, y: 650 }, 
                     { x: 450, y: 650 }, 
@@ -359,46 +408,112 @@
 
         // --- Checkpoint Cleanup for Shared Locations ---
         const INTERSECTION_POINTS = {
-            '100,450': { x: 100, y: 450, val: "19", paths: ["q-15x4", "q-5+7"] },
-            '300,650': { x: 300, y: 650, val: "68", paths: ["q-10x5", "q-8+6"] },
-            '450,150': { x: 450, y: 150, val: "12", paths: ["q-5+7", "q-8+6"] },
-            '750,250': { x: 750, y: 250, val: "35", paths: ["q-15x4", "q-5+7"] },
-            '800,100': { x: 800, y: 100, val: "48", paths: ["q-10x5", "q-8+6"] },
-            '900,450': { x: 900, y: 450, val: "14", paths: ["q-5+7", "q-8+6"] }
+            '100,450': { x: 100, y: 450, val: "68", paths: ["q-7+5", "q-6+8"] },
+            '300,650': { x: 300, y: 650, val: "45", paths: ["q-10x5", "q-15x4"] },
+            '450,150': { x: 450, y: 150, val: "48", paths: ["q-6+8", "q-15x4"] },
+            '750,250': { x: 750, y: 250, val: "14", paths: ["q-7+5", "q-6+8"] },
+            '800,100': { x: 800, y: 100, val: "100", paths: ["q-10x5", "q-15x4"] },
+            '900,450': { x: 900, y: 450, val: "60", paths: ["q-6+8", "q-15x4"] }
         };
 
         const CHECKPOINTS = [
             { id: 1, qID: "q-10x5", val: "15", segIndex: 0, t: 0.65 },
             { id: 2, qID: "q-10x5", val: "50", segIndex: 1, t: 0.35 },
 
-            { id: 8, qID: "q-15x4", val: "60", segIndex: 2, t: 0.5 },
-            { id: 9, qID: "q-15x4", val: "70", segIndex: 3, t: 0.5 },
+            { id: 8, qID: "q-7+5", val: "35", segIndex: 2, t: 0.5 },
+            { id: 9, qID: "q-7+5", val: "12", segIndex: 3, t: 0.5 },
 
 
-            // (100,450) q-15x4 × q-5+7
-            { id: 1, qID: "q-15x4", val: "19", segIndex: 1, t: 0.364, isShared: true },
-            { id: 2, qID: "q-5+7",  val: "19", segIndex: 0, t: 0.500, isShared: true },
+            // (100,450) q-7+5 × q-6+8
+            { id: 1, qID: "q-7+5", val: "68", segIndex: 1, t: 0.364, isShared: true },
+            { id: 2, qID: "q-6+8",  val: "68", segIndex: 0, t: 0.500, isShared: true },
 
-            // (300,650) q-10x5 × q-8+6
-            { id: 7, qID: "q-10x5", val: "68", segIndex: 1, t: 0.857, isShared: true },
-            { id: 8, qID: "q-8+6",  val: "68", segIndex: 0, t: 0.667, isShared: true },
+            // (300,650) q-10x5 × q-15x4
+            { id: 7, qID: "q-10x5", val: "45", segIndex: 1, t: 0.857, isShared: true },
+            { id: 8, qID: "q-15x4",  val: "45", segIndex: 0, t: 0.667, isShared: true },
 
-            // (450,150) q-5+7 × q-8+6
-            { id: 9, qID: "q-5+7",  val: "12", segIndex: 2, t: 0.333, isShared: true },
-            { id: 10, qID: "q-8+6", val: "12", segIndex: 1, t: 0.85, isShared: true },
+            // (450,150) q-6+8 × q-15x4
+            { id: 9, qID: "q-6+8",  val: "48", segIndex: 2, t: 0.333, isShared: true },
+            { id: 10, qID: "q-15x4", val: "48", segIndex: 1, t: 0.85, isShared: true },
 
-            // (750,250) q-15x4 × q-5+7
-            { id: 13, qID: "q-15x4", val: "35", segIndex: 4, t: 0.333, isShared: true },
-            { id: 14, qID: "q-5+7",  val: "35", segIndex: 3, t: 0.250, isShared: true },
+            // (750,250) q-7+5 × q-6+8
+            { id: 13, qID: "q-7+5", val: "14", segIndex: 4, t: 0.333, isShared: true },
+            { id: 14, qID: "q-6+8",  val: "14", segIndex: 3, t: 0.250, isShared: true },
 
-            // (800,100) q-10x5 × q-8+6
-            { id: 15, qID: "q-10x5", val: "48", segIndex: 3, t: 0.85, isShared: true },
-            { id: 16, qID: "q-8+6",  val: "48", segIndex: 2, t: 0.775, isShared: true },
+            // (800,100) q-10x5 × q-15x4
+            { id: 15, qID: "q-10x5", val: "100", segIndex: 3, t: 0.85, isShared: true },
+            { id: 16, qID: "q-15x4",  val: "100", segIndex: 2, t: 0.775, isShared: true },
 
-            // (900,450) q-5+7 × q-8+6
-            { id: 23, qID: "q-5+7",  val: "14", segIndex: 4, t: 0.750, isShared: true },
-            { id: 24, qID: "q-8+6",  val: "14", segIndex: 3, t: 0.467, isShared: true }
+            // (900,450) q-6+8 × q-15x4
+            { id: 23, qID: "q-6+8",  val: "60", segIndex: 4, t: 0.750, isShared: true },
+            { id: 24, qID: "q-15x4",  val: "60", segIndex: 3, t: 0.467, isShared: true }
         ];
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function showSuccessModal(qID, questionText, correctVal) {
+            const successImages = {
+                "q-10x5": "images/grandma.jpg",
+                "q-7+5": "images/mom.jpg",
+                "q-6+8": "images/teacher.jpg",
+                "q-15x4": "images/classmate.jpg",
+            };
+
+            // Define different titles and messages per question
+            const successMessages = {
+                "q-10x5": {
+                    title: "🎉 Cháu của bà giỏi quá!",
+                    text: `Kết quả: ${questionText} được ${correctVal}`
+                },
+                "q-7+5": {
+                    title: "🌟 Con thật thông minh!",
+                    text: `Kết quả: ${questionText} được ${correctVal}`
+                },
+                "q-6+8": {
+                    title: "🚀 Hay lắm! Tiếp tục nhé!",
+                    text: `Kết quả: ${questionText} được ${correctVal}`
+                },
+                "q-15x4": {
+                    title: "🏆 Cậu làm rất tốt!",
+                    text: `Kết quả: ${questionText} được ${correctVal}`
+                }
+            };
+
+
+            const modal = document.getElementById("successModal");
+            const img = document.getElementById("successImage");
+            const title = document.getElementById("successTitle");
+            const text = document.getElementById("successText");
+
+            // Pick correct image and message
+            const imageSrc = successImages[qID] || "images/co-ngan.png";
+            const message = successMessages[qID] || {
+                title: "🎉 Chính xác!",
+                text: `${questionText} là ${correctVal}!`
+            };
+
+            // Apply modal content
+            img.src = imageSrc;
+            title.textContent = message.title;
+            text.textContent = message.text;
+
+            // Show modal
+            modal.style.display = "block";
+
+            // Auto-close modal after 5s (shorter than 30s)
+            setTimeout(() => closeModal("successModal"), 5000);
+        }
+
+        function showNiceTryModal(message) {
+            const modal = document.getElementById("niceTryModal");
+            const text = document.getElementById("niceTryText");
+            text.textContent = message;
+            modal.style.display = "block";
+
+            setTimeout(() => closeModal("niceTryModal"), 10000);
+        }
 
         function getCheckpointCanvasPosition(cp) {
             const pathDef = PATHS[cp.qID];
@@ -538,7 +653,6 @@
             if (fullReset) {
                 questionBoxes.forEach(q => q.classList.remove('selected'));
                 selectedQuestion = null;
-                messageDisplay.textContent = '';
             }
             drawAllPaths(); 
         }
@@ -596,7 +710,6 @@
 
             // Check for path end 
             if (progressRatio >= 1.05) { 
-                // messageDisplay.textContent = "Hành trình đã kết thúc. Hãy chọn một câu hỏi khác để tiếp tục chọn đáp án.";
                 setTimeout(() => resetGame(true), 0);
                 return;
             }
@@ -609,71 +722,77 @@
             if (event.key !== ' ' || !isPathAnimating || !selectedQuestion) return;
 
             event.preventDefault(); 
-            
             cancelAnimationFrame(animationFrameId);
             isPathAnimating = false;
 
             const activeSegmentIndex = currentPathIndex; 
-            
             const relevantCheckpoints = CHECKPOINTS.filter(c => c.qID === selectedQuestion.id);
 
             let chosenCheckpointValue = null;
-            // Calculate the progress through the segment at the moment the key was pressed
-            // let finalSegmentProgress = (performance.now() - startTime) % segmentDrawDuration / segmentDrawDuration;
             let finalSegmentProgress = currentSegmentProgress;
 
-            // Check if the light is near a checkpoint
             relevantCheckpoints.forEach(cp => {
-                
                 if (cp.segIndex === activeSegmentIndex) {
-                    if (finalSegmentProgress >= cp.t - HITBOX_TOLERANCE && finalSegmentProgress <= cp.t + HITBOX_TOLERANCE) {
-                        
-                        const cpPos = getCheckpointCanvasPosition(cp);
-                        let checkpointValue = cp.val; // Default to unique value
-                        
-                        // Check for intersection points to get the correct shared value
-                        for(const key in INTERSECTION_POINTS) {
-                            if (INTERSECTION_POINTS[key].x === Math.round(cpPos.x) && INTERSECTION_POINTS[key].y === Math.round(cpPos.y)) {
-                                checkpointValue = INTERSECTION_POINTS[key].val;
-                                break;
-                            }
-                        }
-                        
-                        chosenCheckpointValue = checkpointValue; 
+                if (finalSegmentProgress >= cp.t - HITBOX_TOLERANCE && finalSegmentProgress <= cp.t + HITBOX_TOLERANCE) {
+                    const cpPos = getCheckpointCanvasPosition(cp);
+                    let checkpointValue = cp.val;
+                    for (const key in INTERSECTION_POINTS) {
+                    if (INTERSECTION_POINTS[key].x === Math.round(cpPos.x) && INTERSECTION_POINTS[key].y === Math.round(cpPos.y)) {
+                        checkpointValue = INTERSECTION_POINTS[key].val;
+                        break;
                     }
+                    }
+                    chosenCheckpointValue = checkpointValue;
+                }
                 }
             });
-            
+
             if (chosenCheckpointValue) {
-                // --- NEW LOGIC: Store and Display Chosen Answer ---
                 const qID = selectedQuestion.id;
-                userAnswers[qID] = chosenCheckpointValue;
                 const finalBox = BOX_ELEMENTS[FINAL_BOX_MAP[qID]];
+                const correctVal = selectedQuestion.dataset.correctVal;
+                const questionText = selectedQuestion.dataset.qKey;
+
+                userAnswers[qID] = chosenCheckpointValue;
                 finalBox.querySelector('.answer-content').textContent = chosenCheckpointValue;
-                
-                // Clear any previous result icon
                 finalBox.querySelectorAll('.result-icon').forEach(icon => icon.remove());
+
                 const chosenIcon = document.createElement('span');
-                chosenIcon.classList.add('result-icon', 'correct');
-                chosenIcon.textContent = '⭐';
+                chosenIcon.classList.add('result-icon');
+
+                if (chosenCheckpointValue === correctVal) {
+                    chosenIcon.classList.add('correct');
+                    chosenIcon.textContent = '✅';
+                    try { soundSuccess.currentTime = 0; soundSuccess.play(); } catch(e) {}
+
+                    // ✅ Show success modal based on question number
+                    showSuccessModal(qID, questionText, correctVal);
+                } else {
+                    chosenIcon.classList.add('wrong');
+                    chosenIcon.textContent = '❌';
+                    try { soundFail.currentTime = 0; soundFail.play(); } catch(e) {}
+
+                    // ❌ Show Nice Try modal
+                    showNiceTryModal("Con hãy thử lại nhé. Cô Ngân tin lần này con sẽ làm được! 💖");
+                }
+
                 finalBox.appendChild(chosenIcon);
-                
-                // messageDisplay.textContent = `✅ Con đã chọn đáp án ${chosenCheckpointValue} cho câu hỏi "${selectedQuestion.dataset.qKey}". Hãy chọn câu hỏi khác hoặc nhấn "Nộp đáp án" khi hoàn thành.`;
-            
-                soundSelect.currentTime = 0;
-                soundSelect.play().catch(e => {}); 
-                
                 updateSubmitButtonState();
+
+                try { soundSelect.currentTime = 0; soundSelect.play(); } catch(e) {}
             } else {
-                // messageDisplay.textContent = "Con đã bỏ lỡ mục tiêu! Hãy chọn lại câu hỏi và thử lại.";
-                soundFail.currentTime = 0;
-                soundFail.play().catch(e => {});
+                // Missed checkpoint
+                showNiceTryModal("⚠️ Con đã bỏ lỡ mục tiêu! Hãy chọn lại câu hỏi và thử lại nhé!");
+                try { soundFail.currentTime = 0; soundFail.play(); } catch(e) {}
             }
-            
-            // Re-draw immediately to show final state 
+
+            if (selectedQuestion) selectedQuestion.classList.remove('selected');
+            selectedQuestion = null;
+            currentPathIndex = 0;
+            startTime = null;
+            checkpointsPassed.clear();
+
             drawAllPaths();
-            
-            setTimeout(() => resetGame(true), 0);
         }
 
         function handleQuestionClick(event) {
@@ -693,8 +812,6 @@
             // Play start sound
             soundStart.currentTime = 0;
             soundStart.play().catch(e => console.log("Audio Autoplay Blocked:", e));
-            
-            // messageDisplay.textContent = `Hành trình tìm đáp án cho câu hỏi "${selectedQuestion.dataset.qKey}" đã bắt đầu. Hãy nhấn phím cách (Spacebar) khi đến đáp án!`;
             
             animationFrameId = requestAnimationFrame(animatePathStep);
         }
@@ -772,7 +889,6 @@
                 finalBox.appendChild(icon);
             });
 
-            // messageDisplay.textContent = "Đây là đáp án chính xác cho tất cả các câu hỏi.";
             showAnswerBtn.disabled = true;
         }
 
