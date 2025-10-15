@@ -26,14 +26,14 @@
         
         /* Question and Final Boxes (outside the path) */
         .box {
-            width: 200px; 
-            height: 60px; 
-            line-height: 60px;
+            width: 270px; 
+            height: 90px; 
+            line-height: 90px;
             text-align: center;
             background-color: #ffffff;
             border: 3px solid #b3e5fc; 
             border-radius: 12px;
-            font-size: 1.2em;
+            font-size: 2em;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
@@ -49,6 +49,11 @@
         .question:hover { border-color: #00bcd4; background-color: #e0f7fa; }
         .question.selected { color: black; border-color: #006064; } 
         
+
+        .box.question {
+            transform: translate(-50px, -15px);
+        }
+
         /* Specific colors for Question Boxes */
         #q-10x5.selected { background-color: #D32F2F; } 
         #q-7\+5.selected { background-color: #1976D2; } 
@@ -60,8 +65,9 @@
             color: white;
             cursor: default;
             border-color: #0d47a1;
-            font-size: 1.5em; 
+            font-size: 2em; 
             padding-left: 0; /* Reset padding */
+            transform: translate(-20px, -15px);
         }
 
         /* Answer content and icon alignment */
@@ -316,7 +322,7 @@
         // Path/Drawing Constants
         const PATH_LINE_WIDTH = 50; 
         const segmentDrawDuration = 2000; 
-        const CHECKPOINT_RADIUS = 20;
+        const CHECKPOINT_RADIUS = 25;
         const HITBOX_TOLERANCE = 0.3; 
 
         // Color mapping
@@ -412,7 +418,7 @@
             '300,650': { x: 300, y: 650, val: "45", paths: ["q-10x5", "q-15x4"] },
             '450,150': { x: 450, y: 150, val: "48", paths: ["q-6+8", "q-15x4"] },
             '750,250': { x: 750, y: 250, val: "14", paths: ["q-7+5", "q-6+8"] },
-            '800,100': { x: 800, y: 100, val: "100", paths: ["q-10x5", "q-15x4"] },
+            '800,100': { x: 800, y: 100, val: "19", paths: ["q-10x5", "q-15x4"] },
             '900,450': { x: 900, y: 450, val: "60", paths: ["q-6+8", "q-15x4"] }
         };
 
@@ -441,8 +447,8 @@
             { id: 14, qID: "q-6+8",  val: "14", segIndex: 3, t: 0.250, isShared: true },
 
             // (800,100) q-10x5 × q-15x4
-            { id: 15, qID: "q-10x5", val: "100", segIndex: 3, t: 0.85, isShared: true },
-            { id: 16, qID: "q-15x4",  val: "100", segIndex: 2, t: 0.775, isShared: true },
+            { id: 15, qID: "q-10x5", val: "19", segIndex: 3, t: 0.85, isShared: true },
+            { id: 16, qID: "q-15x4",  val: "19", segIndex: 2, t: 0.775, isShared: true },
 
             // (900,450) q-6+8 × q-15x4
             { id: 23, qID: "q-6+8",  val: "60", segIndex: 4, t: 0.750, isShared: true },
@@ -465,19 +471,19 @@
             const successMessages = {
                 "q-10x5": {
                     title: "🎉 Cháu của bà giỏi quá!",
-                    text: `Kết quả: ${questionText} được ${correctVal}`
+                    text: `Kết quả đúng: ${questionText} được ${correctVal}`
                 },
                 "q-7+5": {
-                    title: "🌟 Con thật thông minh!",
-                    text: `Kết quả: ${questionText} được ${correctVal}`
+                    title: "🥰 Mẹ tự hào về con!",
+                    text: `Kết quả đúng: ${questionText} được ${correctVal}`
                 },
                 "q-6+8": {
-                    title: "🚀 Hay lắm! Tiếp tục nhé!",
-                    text: `Kết quả: ${questionText} được ${correctVal}`
+                    title: "🌟 Chính xác! Cô khen con!",
+                    text: `Kết quả đúng: ${questionText} được ${correctVal}`
                 },
                 "q-15x4": {
                     title: "🏆 Cậu làm rất tốt!",
-                    text: `Kết quả: ${questionText} được ${correctVal}`
+                    text: `Kết quả đúng: ${questionText} được ${correctVal}`
                 }
             };
 
@@ -502,8 +508,8 @@
             // Show modal
             modal.style.display = "block";
 
-            // Auto-close modal after 5s (shorter than 30s)
-            setTimeout(() => closeModal("successModal"), 5000);
+            // Auto-close modal after 30s
+            setTimeout(() => closeModal("successModal"), 20000);
         }
 
         function showNiceTryModal(message) {
@@ -583,7 +589,7 @@
         }
         
         function drawCheckpoint(x, y, val) {
-            ctx.font = "bold 24px Arial";
+            ctx.font = "bold 36px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             
